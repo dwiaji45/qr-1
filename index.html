@@ -41,7 +41,7 @@
             color: #111;
         }
 
-        /* Desain Input */
+        /* Desain Input & Baris Input */
         .input-group { 
             margin-bottom: 16px; 
             text-align: left;
@@ -53,6 +53,16 @@
             color: #555;
             margin-bottom: 8px;
         }
+        
+        /* Modifikasi Layout Input untuk Fitur Shortlink & Copy */
+        .input-row {
+            display: flex;
+            gap: 8px;
+        }
+        .input-row input[type="text"] {
+            flex: 1; /* Input mengisi sisa ruang */
+        }
+
         input[type="text"] { 
             width: 100%; 
             padding: 12px 16px; 
@@ -68,6 +78,31 @@
             border-color: #0e58a6;
             background-color: #fff;
             box-shadow: 0 0 0 3px rgba(14, 88, 166, 0.15);
+        }
+
+        /* Desain Tombol Ikon (Copy & Shorten) */
+        .icon-btn {
+            background-color: #fafbfc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 0 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        .icon-btn:hover {
+            background-color: #e2e8f0;
+            border-color: #cbd5e1;
+        }
+        .icon-btn:active {
+            transform: scale(0.95);
+        }
+        .icon-btn svg {
+            width: 18px;
+            height: 18px;
+            fill: #475569;
         }
         
         /* Tombol Buat QR */
@@ -109,7 +144,7 @@
 
         /* Grup Tombol Unduh */
         .btn-group {
-            display: none; /* Disembunyikan sampai QR dibuat */
+            display: none;
             gap: 12px;
             margin-top: 16px;
             animation: fadeIn 0.5s ease-in-out;
@@ -117,7 +152,7 @@
 
         /* Tombol Unduh (Gaya Outline) */
         .btn-outline {
-            flex: 1; /* Membuat kedua tombol berukuran sama */
+            flex: 1; 
             background-color: transparent; 
             color: #0e58a6; 
             padding: 12px; 
@@ -148,7 +183,21 @@
         
         <div class="input-group">
             <label>Teks atau URL Tujuan</label>
-            <input type="text" id="input-teks" placeholder="Masukkan link atau teks...">
+            <div class="input-row">
+                <input type="text" id="input-teks" placeholder="Masukkan link atau teks...">
+                
+                <button class="icon-btn" id="btn-shorten" onclick="shortenUrl()" title="Perpendek URL">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/>
+                    </svg>
+                </button>
+                
+                <button class="icon-btn" onclick="copyText()" title="Salin Teks/URL">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+                    </svg>
+                </button>
+            </div>
         </div>
         
         <div class="input-group">
@@ -170,11 +219,68 @@
 
     <script>
         const logoUrl = "https://lh3.googleusercontent.com/d/196-yYlDwDc-tUVDTslzPAlBWTmf4ZbWg";
-        
-        // Variabel global untuk menyimpan data SVG mentah
         let currentQrSvgData = ""; 
         let currentLogoBase64 = "";
 
+        // --- FITUR BARU: Short Link ---
+        async function shortenUrl() {
+            const inputTeks = document.getElementById("input-teks");
+            const url = inputTeks.value.trim();
+
+            if (!url) {
+                alert("Mohon masukkan URL terlebih dahulu.");
+                return;
+            }
+
+            // Validasi apakah input adalah URL yang valid untuk diperpendek
+            if (!url.startsWith("http://") && !url.startsWith("https://")) {
+                alert("Harap masukkan URL yang valid (dimulai dengan http:// atau https://). Teks biasa tidak dapat diperpendek.");
+                return;
+            }
+
+            const btnShorten = document.getElementById("btn-shorten");
+            btnShorten.disabled = true;
+            btnShorten.style.opacity = "0.5";
+
+            try {
+                // Menggunakan TinyURL API (gratis & tidak memerlukan CORS khusus)
+                const response = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(url)}`);
+                
+                if (response.ok) {
+                    const shortUrl = await response.text();
+                    inputTeks.value = shortUrl;
+                    alert("URL berhasil diperpendek!");
+                } else {
+                    alert("Gagal memperpendek URL. Layanan mungkin sedang sibuk.");
+                }
+            } catch (error) {
+                console.error("Error shortening URL:", error);
+                alert("Terjadi kesalahan jaringan saat mencoba memperpendek URL.");
+            } finally {
+                btnShorten.disabled = false;
+                btnShorten.style.opacity = "1";
+            }
+        }
+
+        // --- FITUR BARU: Copy Teks ---
+        function copyText() {
+            const inputTeks = document.getElementById("input-teks");
+            
+            if (!inputTeks.value.trim()) {
+                alert("Tidak ada teks yang dapat disalin.");
+                return;
+            }
+
+            // Salin ke clipboard sistem
+            navigator.clipboard.writeText(inputTeks.value).then(() => {
+                alert("Teks berhasil disalin ke clipboard!");
+            }).catch(err => {
+                console.error("Gagal menyalin: ", err);
+                alert("Gagal menyalin teks secara otomatis.");
+            });
+        }
+
+        // --- FUNGSI BAWAAN: Generate QR ---
         function buatQR() {
             const teks = document.getElementById("input-teks").value;
             const judul = document.getElementById("input-judul").value;
@@ -187,18 +293,15 @@
             const canvas = document.getElementById("qr-canvas");
             const ctx = canvas.getContext("2d");
 
-            // 1. Latar Belakang Canvas
             ctx.fillStyle = "#ffffff";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // 2. Menggambar Judul
             ctx.fillStyle = "#111111";
             ctx.font = "bold 22px 'Inter', Arial, sans-serif";
             ctx.textAlign = "center";
             let teksJudul = judul.trim() === "" ? "QR Code" : judul;
             ctx.fillText(teksJudul, canvas.width / 2, 45); 
 
-            // 3. Membuat QR Code di canvas sementara (Untuk PNG)
             const tempCanvas = document.createElement("canvas");
             
             QRCode.toCanvas(tempCanvas, teks, {
@@ -210,7 +313,6 @@
                 if (error) console.error(error);
                 ctx.drawImage(tempCanvas, 20, 65, 360, 360);
 
-                // 4. Generate QR Code ke dalam format String SVG (Untuk fitur Download SVG)
                 QRCode.toString(teks, {
                     type: 'svg',
                     margin: 1,
@@ -219,7 +321,6 @@
                 }, function (err, svgString) {
                     if (err) console.error(err);
                     
-                    // Modifikasi tag <svg> bawaan agar ukurannya pas di tata letak kita
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(svgString, "image/svg+xml");
                     const svgEl = doc.documentElement;
@@ -229,20 +330,17 @@
                     svgEl.setAttribute("y", "65");
                     currentQrSvgData = svgEl.outerHTML;
 
-                    // 5. Memasukkan Logo di Tengah
                     const img = new Image();
                     img.crossOrigin = "Anonymous"; 
                     img.src = logoUrl;
                     
                     img.onload = function() {
-                        // Simpan logo ke Base64 (Untuk disematkan ke dalam file SVG nantinya)
                         const imgCanvas = document.createElement("canvas");
                         imgCanvas.width = img.width;
                         imgCanvas.height = img.height;
                         imgCanvas.getContext("2d").drawImage(img, 0, 0);
                         currentLogoBase64 = imgCanvas.toDataURL("image/png");
 
-                        // Gambar logo di canvas utama (Untuk PNG)
                         const logoSize = 80; 
                         const x = 20 + (360 / 2) - (logoSize / 2);
                         const y = 65 + (360 / 2) - (logoSize / 2);
@@ -260,7 +358,6 @@
                         ctx.drawImage(img, x, y, logoSize, logoSize);
                         ctx.restore();
 
-                        // Tampilkan Hasil & Tombol Unduh
                         document.getElementById("canvas-container").style.display = "block";
                         document.getElementById("grup-unduh").style.display = "flex";
                     };
@@ -268,7 +365,7 @@
             });
         }
 
-        // Fungsi gabungan untuk mengunduh PNG atau SVG
+        // --- FUNGSI BAWAAN: Unduh ---
         function unduhGambar(format) {
             const judulInput = document.getElementById("input-judul").value.trim();
             let namaFile = judulInput === "" ? "QR_Code" : judulInput;
@@ -284,7 +381,6 @@
             else if (format === 'svg') {
                 let judulTeks = judulInput === "" ? "QR Code" : judulInput;
                 
-                // Menyusun kode struktur gambar SVG
                 const svgLengkap = `
                     <svg xmlns="http://www.w3.org/2000/svg" width="400" height="450">
                         <rect width="400" height="450" fill="#ffffff" />
@@ -300,13 +396,11 @@
                     </svg>
                 `;
 
-                // Buat Blob dari string SVG dan siapkan link unduhan
                 const blob = new Blob([svgLengkap], { type: "image/svg+xml;charset=utf-8" });
                 link.download = namaFile + ".svg";
                 link.href = URL.createObjectURL(blob);
             }
 
-            // Eksekusi Unduhan
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
