@@ -26,9 +26,9 @@
         /* Desain Card Utama */
         .card { 
             background: #ffffff; 
-            padding: 40px 32px; 
-            border-radius: 16px; 
-            box-shadow: 0 10px 30px rgba(14, 88, 166, 0.08); 
+            padding: 30px 22px; 
+            border-radius: 20px; 
+            box-shadow: 0 10px 30px rgba(14, 88, 166, 0.35); 
             width: 100%;
             max-width: 420px;
             text-align: center;
@@ -36,9 +36,9 @@
         
         .card h2 {
             font-weight: 600;
-            font-size: 22px;
-            margin-bottom: 24px;
-            color: #111;
+            font-size: 26px;
+            margin-bottom: 6px;
+            color: #0E58A6;
         }
 
         /* Desain Input & Baris Input */
@@ -179,7 +179,7 @@
 <body>
 
     <div class="card">
-        <h2>Buat QR Code</h2>
+        <h2><strong>BUAT QR DUA DIMENSI</strong></h2>
         
         <div class="input-group">
             <label>Teks atau URL Tujuan</label>
@@ -201,17 +201,25 @@
         </div>
         
         <div class="input-group">
-            <label>Judul File & QR Code</label>
+            <label>Judul File QR Code</label>
             <input type="text" id="input-judul" placeholder="Contoh: Website Perusahaan">
         </div>
         
-        <button id="btn-buat" onclick="buatQR()">Generate QR Code</button>
+        <button id="btn-buat" onclick="buatQR()">Generate QR</button>
         
         <div id="canvas-container">
             <canvas id="qr-canvas" width="400" height="450"></canvas>
         </div>
 
         <div class="btn-group" id="grup-unduh">
+            <!-- Dropdown pilihan ukuran (berdasarkan Lebar/Width) -->
+            <select id="opsi-ukuran" style="padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; outline: none; font-family: 'Inter', sans-serif;">
+                <option value="400">Normal (400px)</option>
+                <option value="720">HD (720px)</option>
+                <option value="1080">Full HD (1080px)</option>
+                <option value="2000">Cetak/Print (2000px)</option>
+            </select>
+
             <button class="btn-outline" onclick="unduhGambar('png')">Unduh PNG</button>
             <button class="btn-outline" onclick="unduhGambar('svg')">Unduh SVG</button>
         </div>
@@ -282,64 +290,64 @@
 
         // --- FUNGSI BAWAAN: Generate QR ---
         // --- FUNGSI BAWAAN: Generate QR ---
-        function buatQR() {
-            const teks = document.getElementById("input-teks").value;
-            const judul = document.getElementById("input-judul").value;
+function buatQR() {
+    const teks = document.getElementById("input-teks").value;
+    const judul = document.getElementById("input-judul").value;
     
-            if (!teks) {
-                alert("Mohon masukkan Teks atau URL tujuan terlebih dahulu.");
-                return;
-            }
+    if (!teks) {
+        alert("Mohon masukkan Teks atau URL tujuan terlebih dahulu.");
+        return;
+    }
 
-            const canvas = document.getElementById("qr-canvas");
-            const ctx = canvas.getContext("2d");
+    const canvas = document.getElementById("qr-canvas");
+    const ctx = canvas.getContext("2d");
 
     // --- FIX 1: Resolusi High-DPI untuk ketajaman ekstra ---
-            const dpr = window.devicePixelRatio || 1;
-            const rectWidth = 400;
-            const rectHeight = 450;
+    const dpr = window.devicePixelRatio || 1;
+    const rectWidth = 400;
+    const rectHeight = 450;
 
     // Atur resolusi internal canvas dikalikan dengan rasio layar
-            canvas.width = rectWidth * dpr;
-            canvas.height = rectHeight * dpr;
+    canvas.width = rectWidth * dpr;
+    canvas.height = rectHeight * dpr;
     
     // Atur ukuran visual canvas menggunakan CSS
-            canvas.style.width = `${rectWidth}px`;
-            canvas.style.height = `${rectHeight}px`;
+    canvas.style.width = `${rectWidth}px`;
+    canvas.style.height = `${rectHeight}px`;
 
     // Skalakan context agar semua elemen yang digambar proporsional
-            ctx.scale(dpr, dpr);
+    ctx.scale(dpr, dpr);
 
     // --- FIX 2: Tingkatkan Kualitas Smoothing Gambar ---
-            ctx.imageSmoothingEnabled = true;
-            ctx.imageSmoothingQuality = "high";
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
 
-            ctx.fillStyle = "#ffffff";
-            ctx.fillRect(0, 0, rectWidth, rectHeight);
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, rectWidth, rectHeight);
 
-            ctx.fillStyle = "#111111";
-            ctx.font = "bold 22px 'Inter', Arial, sans-serif";
-            ctx.textAlign = "center";
-            let teksJudul = judul.trim() === "" ? "QR Code" : judul;
-            ctx.fillText(teksJudul, rectWidth / 2, 45); 
+    ctx.fillStyle = "#111111";
+    ctx.font = "bold 22px 'Inter', Arial, sans-serif";
+    ctx.textAlign = "center";
+    let teksJudul = judul.trim() === "" ? "QR Code" : judul;
+    ctx.fillText(teksJudul, rectWidth / 2, 45); 
 
-            const tempCanvas = document.createElement("canvas");
+    const tempCanvas = document.createElement("canvas");
     
-            QRCode.toCanvas(tempCanvas, teks, {
-                width: 360,
-                margin: 1,
-                color: { dark: "#000000", light: "#ffffff" },
-                errorCorrectionLevel: 'H' 
-            }, function (error) {
-                if (error) console.error(error);
-                ctx.drawImage(tempCanvas, 20, 65, 360, 360);
+    QRCode.toCanvas(tempCanvas, teks, {
+        width: 360,
+        margin: 1,
+        color: { dark: "#000000", light: "#ffffff" },
+        errorCorrectionLevel: 'H' 
+    }, function (error) {
+        if (error) console.error(error);
+        ctx.drawImage(tempCanvas, 20, 65, 360, 360);
 
-                QRCode.toString(teks, {
+        QRCode.toString(teks, {
             type: 'svg',
             margin: 1,
             color: { dark: "#000000", light: "#ffffff" },
             errorCorrectionLevel: 'H'
-                }, function (err, svgString) {
+        }, function (err, svgString) {
             if (err) console.error(err);
             
             const parser = new DOMParser();
@@ -349,88 +357,109 @@
             svgEl.setAttribute("height", "360");
             svgEl.setAttribute("x", "20");
             svgEl.setAttribute("y", "65");
-                    currentQrSvgData = svgEl.outerHTML;
+            currentQrSvgData = svgEl.outerHTML;
 
-                    const img = new Image();
-                    img.crossOrigin = "Anonymous"; 
-                    img.src = logoUrl;
+            const img = new Image();
+            img.crossOrigin = "Anonymous"; 
+            img.src = logoUrl;
             
-                    img.onload = function() {
-                        const imgCanvas = document.createElement("canvas");
-                        imgCanvas.width = img.width;
-                        imgCanvas.height = img.height;
-                        imgCanvas.getContext("2d").drawImage(img, 0, 0);
-                        currentLogoBase64 = imgCanvas.toDataURL("image/png");
+            img.onload = function() {
+                const imgCanvas = document.createElement("canvas");
+                imgCanvas.width = img.width;
+                imgCanvas.height = img.height;
+                imgCanvas.getContext("2d").drawImage(img, 0, 0);
+                currentLogoBase64 = imgCanvas.toDataURL("image/png");
 
-                        const logoSize = 80; 
-                        const x = 20 + (360 / 2) - (logoSize / 2);
-                        const y = 65 + (360 / 2) - (logoSize / 2);
+                const logoSize = 80; 
+                const x = 20 + (360 / 2) - (logoSize / 2);
+                const y = 65 + (360 / 2) - (logoSize / 2);
 
-                        ctx.fillStyle = "#ffffff";
-                        ctx.beginPath();
-                        ctx.arc(x + logoSize/2, y + logoSize/2, (logoSize/2) + 6, 0, 2 * Math.PI);
-                        ctx.fill();
-        
-                        ctx.save();
-                        ctx.beginPath();
-                        ctx.arc(x + logoSize/2, y + logoSize/2, logoSize/2, 0, Math.PI * 2, true);
-                        ctx.closePath();
-                        ctx.clip();
+                ctx.fillStyle = "#ffffff";
+                ctx.beginPath();
+                ctx.arc(x + logoSize/2, y + logoSize/2, (logoSize/2) + 6, 0, 2 * Math.PI);
+                ctx.fill();
+
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(x + logoSize/2, y + logoSize/2, logoSize/2, 0, Math.PI * 2, true);
+                ctx.closePath();
+                ctx.clip();
                 
                 // Pastikan smoothing menyala kembali di dalam area clipping
-                        ctx.imageSmoothingEnabled = true;
-                        ctx.imageSmoothingQuality = "high";
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = "high";
                 
-                        ctx.drawImage(img, x, y, logoSize, logoSize);
-                        ctx.restore();
+                ctx.drawImage(img, x, y, logoSize, logoSize);
+                ctx.restore();
 
-                        document.getElementById("canvas-container").style.display = "block";
-                                document.getElementById("grup-unduh").style.display = "flex";
-                    };
-                });
-            });
-        }
+                document.getElementById("canvas-container").style.display = "block";
+                document.getElementById("grup-unduh").style.display = "flex";
+            };
+        });
+    });
+}
 
         // --- FUNGSI BAWAAN: Unduh ---
-        function unduhGambar(format) {
-            const judulInput = document.getElementById("input-judul").value.trim();
-            let namaFile = judulInput === "" ? "QR_Code" : judulInput;
-            namaFile = namaFile.replace(/\s+/g, '_'); 
+        // --- FUNGSI BAWAAN: Unduh dengan Opsi Resolusi ---
+          function unduhGambar(format) {
+              const judulInput = document.getElementById("input-judul").value.trim();
+              let namaFile = judulInput === "" ? "QR_Code" : judulInput;
+              namaFile = namaFile.replace(/\s+/g, '_'); 
 
-            const link = document.createElement("a");
+              const link = document.createElement("a");
+    
+    // Ambil nilai resolusi dari dropdown
+              const targetWidth = parseInt(document.getElementById("opsi-ukuran").value);
+    // Hitung tinggi proporsional (berdasarkan rasio asli 400x450)
+              const targetHeight = targetWidth * (450 / 400); 
 
-            if (format === 'png') {
-                const canvas = document.getElementById("qr-canvas");
-                link.download = namaFile + ".png";
-                link.href = canvas.toDataURL("image/png");
-            } 
-            else if (format === 'svg') {
-                let judulTeks = judulInput === "" ? "QR Code" : judulInput;
+              if (format === 'png') {
+                  const canvasAsli = document.getElementById("qr-canvas");
+        
+        // Buat canvas sementara untuk proses perbesaran gambar (scaling)
+                  const tempCanvas = document.createElement("canvas");
+                  tempCanvas.width = targetWidth;
+                  tempCanvas.height = targetHeight;
+                  const tempCtx = tempCanvas.getContext("2d");
+        
+        // Aktifkan mode penghalusan agar gambar tidak bergerigi saat diperbesar
+                  tempCtx.imageSmoothingEnabled = true;
+                  tempCtx.imageSmoothingQuality = "high";
+        
+        // Salin isi canvas asli dan ubah ke ukuran baru di canvas sementara
+                  tempCtx.drawImage(canvasAsli, 0, 0, targetWidth, targetHeight);
+        
+                  link.download = `${namaFile}_${targetWidth}px.png`;
+                  link.href = tempCanvas.toDataURL("image/png");
+          } 
+    else if (format === 'svg') {
+        let judulTeks = judulInput === "" ? "QR Code" : judulInput;
+        
+        // Untuk SVG, kita gunakan properti viewBox agar gambar merespons ukuran berapapun secara proporsional
+        const svgLengkap = `
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 450" width="${targetWidth}" height="${targetHeight}">
+                <rect width="400" height="450" fill="#ffffff" />
+                <text x="200" y="45" font-family="'Inter', Arial, sans-serif" font-size="22" font-weight="bold" text-anchor="middle" fill="#111111">${judulTeks}</text>
                 
-                const svgLengkap = `
-                    <svg xmlns="http://www.w3.org/2000/svg" width="400" height="450">
-                        <rect width="400" height="450" fill="#ffffff" />
-                        <text x="200" y="45" font-family="'Inter', Arial, sans-serif" font-size="22" font-weight="bold" text-anchor="middle" fill="#111111">${judulTeks}</text>
-                        
-                        ${currentQrSvgData}
-                        
-                        <circle cx="200" cy="245" r="46" fill="#ffffff" />
-                        <clipPath id="logo-clip">
-                            <circle cx="200" cy="245" r="40" />
-                        </clipPath>
-                        <image href="${currentLogoBase64}" x="160" y="205" width="80" height="80" clip-path="url(#logo-clip)" preserveAspectRatio="xMidYMid slice" />
-                    </svg>
-                `;
+                ${currentQrSvgData}
+                
+                <circle cx="200" cy="245" r="46" fill="#ffffff" />
+                <clipPath id="logo-clip">
+                    <circle cx="200" cy="245" r="40" />
+                </clipPath>
+                <image href="${currentLogoBase64}" x="160" y="205" width="80" height="80" clip-path="url(#logo-clip)" preserveAspectRatio="xMidYMid slice" />
+            </svg>
+        `;
 
-                const blob = new Blob([svgLengkap], { type: "image/svg+xml;charset=utf-8" });
-                link.download = namaFile + ".svg";
-                link.href = URL.createObjectURL(blob);
-            }
+        const blob = new Blob([svgLengkap], { type: "image/svg+xml;charset=utf-8" });
+        link.download = `${namaFile}_vector.svg`;
+        link.href = URL.createObjectURL(blob);
+    }
 
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
     </script>
 </body>
 </html>
