@@ -399,7 +399,6 @@ function buatQR() {
     });
 }
 
-        // --- FUNGSI BAWAAN: Unduh ---
         // --- FUNGSI BAWAAN: Unduh dengan Opsi Resolusi ---
           function unduhGambar(format) {
               const judulInput = document.getElementById("input-judul").value.trim();
@@ -407,7 +406,6 @@ function buatQR() {
               namaFile = namaFile.replace(/\s+/g, '_'); 
 
               const link = document.createElement("a");
-    
     // Ambil nilai resolusi dari dropdown
               const targetWidth = parseInt(document.getElementById("opsi-ukuran").value);
     // Hitung tinggi proporsional (berdasarkan rasio asli 400x450)
@@ -415,20 +413,20 @@ function buatQR() {
 
               if (format === 'png') {
                   const canvasAsli = document.getElementById("qr-canvas");
-        
+
         // Buat canvas sementara untuk proses perbesaran gambar (scaling)
                   const tempCanvas = document.createElement("canvas");
                   tempCanvas.width = targetWidth;
                   tempCanvas.height = targetHeight;
                   const tempCtx = tempCanvas.getContext("2d");
-        
+
         // Aktifkan mode penghalusan agar gambar tidak bergerigi saat diperbesar
                   tempCtx.imageSmoothingEnabled = true;
                   tempCtx.imageSmoothingQuality = "high";
-        
+
         // Salin isi canvas asli dan ubah ke ukuran baru di canvas sementara
                   tempCtx.drawImage(canvasAsli, 0, 0, targetWidth, targetHeight);
-        
+
                   link.download = `${namaFile}_${targetWidth}px.png`;
                   link.href = tempCanvas.toDataURL("image/png");
           } 
