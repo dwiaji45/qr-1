@@ -281,10 +281,11 @@
         }
 
         // --- FUNGSI BAWAAN: Generate QR ---
+        // --- FUNGSI BAWAAN: Generate QR ---
         function buatQR() {
             const teks = document.getElementById("input-teks").value;
             const judul = document.getElementById("input-judul").value;
-            
+    
             if (!teks) {
                 alert("Mohon masukkan Teks atau URL tujuan terlebih dahulu.");
                 return;
@@ -293,17 +294,37 @@
             const canvas = document.getElementById("qr-canvas");
             const ctx = canvas.getContext("2d");
 
+    // --- FIX 1: Resolusi High-DPI untuk ketajaman ekstra ---
+            const dpr = window.devicePixelRatio || 1;
+            const rectWidth = 400;
+            const rectHeight = 450;
+
+    // Atur resolusi internal canvas dikalikan dengan rasio layar
+            canvas.width = rectWidth * dpr;
+            canvas.height = rectHeight * dpr;
+    
+    // Atur ukuran visual canvas menggunakan CSS
+            canvas.style.width = `${rectWidth}px`;
+            canvas.style.height = `${rectHeight}px`;
+
+    // Skalakan context agar semua elemen yang digambar proporsional
+            ctx.scale(dpr, dpr);
+
+    // --- FIX 2: Tingkatkan Kualitas Smoothing Gambar ---
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = "high";
+
             ctx.fillStyle = "#ffffff";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillRect(0, 0, rectWidth, rectHeight);
 
             ctx.fillStyle = "#111111";
             ctx.font = "bold 22px 'Inter', Arial, sans-serif";
             ctx.textAlign = "center";
             let teksJudul = judul.trim() === "" ? "QR Code" : judul;
-            ctx.fillText(teksJudul, canvas.width / 2, 45); 
+            ctx.fillText(teksJudul, rectWidth / 2, 45); 
 
             const tempCanvas = document.createElement("canvas");
-            
+    
             QRCode.toCanvas(tempCanvas, teks, {
                 width: 360,
                 margin: 1,
@@ -314,26 +335,26 @@
                 ctx.drawImage(tempCanvas, 20, 65, 360, 360);
 
                 QRCode.toString(teks, {
-                    type: 'svg',
-                    margin: 1,
-                    color: { dark: "#000000", light: "#ffffff" },
-                    errorCorrectionLevel: 'H'
+            type: 'svg',
+            margin: 1,
+            color: { dark: "#000000", light: "#ffffff" },
+            errorCorrectionLevel: 'H'
                 }, function (err, svgString) {
-                    if (err) console.error(err);
-                    
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(svgString, "image/svg+xml");
-                    const svgEl = doc.documentElement;
-                    svgEl.setAttribute("width", "360");
-                    svgEl.setAttribute("height", "360");
-                    svgEl.setAttribute("x", "20");
-                    svgEl.setAttribute("y", "65");
+            if (err) console.error(err);
+            
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(svgString, "image/svg+xml");
+            const svgEl = doc.documentElement;
+            svgEl.setAttribute("width", "360");
+            svgEl.setAttribute("height", "360");
+            svgEl.setAttribute("x", "20");
+            svgEl.setAttribute("y", "65");
                     currentQrSvgData = svgEl.outerHTML;
 
                     const img = new Image();
                     img.crossOrigin = "Anonymous"; 
                     img.src = logoUrl;
-                    
+            
                     img.onload = function() {
                         const imgCanvas = document.createElement("canvas");
                         imgCanvas.width = img.width;
@@ -349,17 +370,22 @@
                         ctx.beginPath();
                         ctx.arc(x + logoSize/2, y + logoSize/2, (logoSize/2) + 6, 0, 2 * Math.PI);
                         ctx.fill();
-
+        
                         ctx.save();
                         ctx.beginPath();
                         ctx.arc(x + logoSize/2, y + logoSize/2, logoSize/2, 0, Math.PI * 2, true);
                         ctx.closePath();
                         ctx.clip();
+                
+                // Pastikan smoothing menyala kembali di dalam area clipping
+                        ctx.imageSmoothingEnabled = true;
+                        ctx.imageSmoothingQuality = "high";
+                
                         ctx.drawImage(img, x, y, logoSize, logoSize);
                         ctx.restore();
 
                         document.getElementById("canvas-container").style.display = "block";
-                        document.getElementById("grup-unduh").style.display = "flex";
+                                document.getElementById("grup-unduh").style.display = "flex";
                     };
                 });
             });
