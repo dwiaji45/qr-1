@@ -3,461 +3,1874 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QR Dua Dimensi</title>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <title>Generator QR Dua Dimensi</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="icon" type="image/x-icon" href="https://lh3.googleusercontent.com/d/196-yYlDwDc-tUVDTslzPAlBWTmf4ZbWg">
-    <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
-    
+    <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js" defer></script>
+
     <style>
-        /* CSS Reset & Dasar */
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background-color: #f3f6f9; 
+        :root {
+            --bg-canvas: #f4f6f9;
+            --bg-surface: #ffffff;
+            --bg-subtle: #f8fafc;
+            --ink-primary: #0f172a;
+            --ink-secondary: #475569;
+            --brand-primary: #0e58a6;
+            --brand-hover: #0a427c;
+            --brand-active: #083463;
+            --brand-ink: #0e58a6;
+            --brand-tint: #eef5fc;
+            --accent-success: #065f46;
+            --accent-success-bg: #ecfdf5;
+            --accent-success-border: #a7f3d0;
+            --accent-warn: #92400e;
+            --accent-warn-bg: #fffbeb;
+            --accent-warn-border: #fde68a;
+            --accent-error: #991b1b;
+            --accent-error-bg: #fef2f2;
+            --accent-error-border: #fecaca;
+            --border-subtle: #cbd5e1;
+            --border-control: #64748b;
+            --shadow-shell: 0 1px 3px rgba(15, 23, 42, 0.05), 0 10px 28px rgba(15, 23, 42, 0.06);
+            --radius-shell: 14px;
+            --radius-panel: 10px;
+            --radius-control: 8px;
+        }
+
+        [data-theme="dark"] {
+            --bg-canvas: #0b1120;
+            --bg-surface: #111827;
+            --bg-subtle: #1e293b;
+            --ink-primary: #f8fafc;
+            --ink-secondary: #cbd5e1;
+            --brand-primary: #0e58a6;
+            --brand-hover: #1469c2;
+            --brand-active: #0a427c;
+            --brand-ink: #7cc0ff;
+            --brand-tint: #172554;
+            --accent-success: #6ee7b7;
+            --accent-success-bg: #064e3b;
+            --accent-success-border: #047857;
+            --accent-warn: #fcd34d;
+            --accent-warn-bg: #451a03;
+            --accent-warn-border: #92400e;
+            --accent-error: #fca5a5;
+            --accent-error-bg: #450a0a;
+            --accent-error-border: #991b1b;
+            --border-subtle: #334155;
+            --border-control: #7b8ba1;
+            --shadow-shell: 0 1px 3px rgba(0, 0, 0, 0.4), 0 12px 32px rgba(0, 0, 0, 0.45);
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-canvas);
+            color: var(--ink-primary);
+            min-height: 100dvh;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
-            padding: 20px;
-            color: #333;
+            padding: clamp(14px, 3vw, 28px);
+            line-height: 1.5;
         }
 
-        /* Desain Card Utama */
-        .card { 
-            background: #ffffff; 
-            padding: 46px 34px; 
-            border-radius: 20px; 
-            box-shadow: 0 10px 30px rgba(14, 88, 166, 0.35); 
+        button,
+        select,
+        input[type="color"],
+        input[type="checkbox"],
+        label[for],
+        a[href] {
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        button:disabled,
+        select:disabled,
+        input:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        :focus-visible {
+            outline: 2px solid var(--brand-ink);
+            outline-offset: 2px;
+        }
+
+        .app-shell {
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-shell);
+            box-shadow: var(--shadow-shell);
             width: 100%;
-            max-width: 640px;
-            text-align: center;
-        }
-        
-        .card h2 {
-            font-weight: 600;
-            font-size: 26px;
-            margin-bottom: 10px;
-            color: #0E58A6;
+            max-width: 980px;
+            overflow: hidden;
         }
 
-        /* Desain Input & Baris Input */
-        .input-group { 
-            margin-bottom: 16px; 
-            text-align: left;
-        }
-        .input-group label {
-            display: block;
-            font-weight: 500;
-            font-size: 13px;
-            color: #555;
-            margin-bottom: 8px;
-        }
-        
-        /* Modifikasi Layout Input untuk Fitur Shortlink & Copy */
-        .input-row {
+        .app-header {
+            padding: clamp(16px, 3vw, 22px) clamp(18px, 4vw, 30px);
+            border-bottom: 1px solid var(--border-subtle);
             display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .brand-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-mark {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-control);
+            background-color: var(--brand-primary);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .app-header h1 {
+            font-size: clamp(1.15rem, 2.2vw, 1.375rem);
+            font-weight: 700;
+            color: var(--ink-primary);
+            letter-spacing: -0.015em;
+        }
+
+        .app-subtitle {
+            font-size: 0.875rem;
+            color: var(--ink-secondary);
+        }
+
+        .theme-toggle {
+            min-height: 44px;
+            padding: 8px 14px;
+            background-color: var(--bg-subtle);
+            color: var(--ink-primary);
+            border: 1.5px solid var(--border-control);
+            border-radius: var(--radius-control);
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
             gap: 8px;
         }
-        .input-row input[type="text"] {
-            flex: 1; /* Input mengisi sisa ruang */
+
+        .theme-toggle:hover {
+            border-color: var(--brand-ink);
         }
 
-        input[type="text"] { 
-            width: 100%; 
-            padding: 12px 16px; 
-            font-family: 'Inter', sans-serif;
-            font-size: 14px;
-            border: 1px solid #e2e8f0; 
-            border-radius: 8px; 
-            transition: all 0.3s ease;
+        .workspace-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+        }
+
+        @media (min-width: 880px) {
+            .workspace-grid {
+                grid-template-columns: 1.18fr 0.82fr;
+            }
+        }
+
+        .form-pane {
+            padding: clamp(18px, 4vw, 30px);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .preview-pane {
+            padding: clamp(18px, 4vw, 30px);
+            background-color: var(--bg-subtle);
+            border-top: 1px solid var(--border-subtle);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        @media (min-width: 880px) {
+            .preview-pane {
+                border-top: none;
+                border-left: 1px solid var(--border-subtle);
+            }
+        }
+
+        .section-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--ink-primary);
+            margin-bottom: 2px;
+        }
+
+        /* Content Type Tabs */
+        .mode-tabs {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+            background-color: var(--bg-subtle);
+            padding: 5px;
+            border-radius: var(--radius-panel);
+            border: 1px solid var(--border-subtle);
+        }
+
+        .mode-tab {
+            min-height: 44px;
+            padding: 8px 10px;
+            border: 1px solid transparent;
+            border-radius: var(--radius-control);
+            background-color: transparent;
+            color: var(--ink-secondary);
+            font-size: 0.875rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .mode-tab:hover {
+            color: var(--ink-primary);
+        }
+
+        .mode-tab[aria-selected="true"] {
+            background-color: var(--bg-surface);
+            color: var(--brand-ink);
+            border-color: var(--border-subtle);
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+        }
+
+        .tab-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .tab-panel[hidden] {
+            display: none;
+        }
+
+        /* Form Fields */
+        .field-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .field-row-2 {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        @media (min-width: 540px) {
+            .field-row-2 {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .field-label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--ink-primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 8px;
+        }
+
+        .field-hint {
+            font-size: 0.8rem;
+            font-weight: 400;
+            color: var(--ink-secondary);
+        }
+
+        .input-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        @media (min-width: 520px) {
+            .input-wrapper {
+                flex-direction: row;
+                align-items: stretch;
+            }
+        }
+
+        .text-input,
+        .textarea-input,
+        .select-control {
+            width: 100%;
+            min-height: 46px;
+            padding: 10px 14px;
+            font-family: inherit;
+            font-size: 0.925rem;
+            color: var(--ink-primary);
+            background-color: var(--bg-surface);
+            border: 1.5px solid var(--border-control);
+            border-radius: var(--radius-control);
+            scroll-margin-bottom: 110px;
+        }
+
+        .textarea-input {
+            min-height: 76px;
+            resize: vertical;
+        }
+
+        .text-input::placeholder,
+        .textarea-input::placeholder {
+            color: var(--ink-secondary);
+            opacity: 0.85;
+        }
+
+        .text-input:hover,
+        .textarea-input:hover,
+        .select-control:hover {
+            border-color: var(--ink-primary);
+        }
+
+        .text-input:focus,
+        .textarea-input:focus,
+        .select-control:focus {
             outline: none;
-            background-color: #fafbfc;
-        }
-        input[type="text"]:focus {
-            border-color: #0e58a6;
-            background-color: #fff;
-            box-shadow: 0 0 0 3px rgba(14, 88, 166, 0.15);
+            border-color: var(--brand-ink);
+            box-shadow: 0 0 0 3px rgba(14, 88, 166, 0.2);
         }
 
-        /* Desain Tombol Ikon (Copy & Shorten) */
-        .icon-btn {
-            background-color: #fafbfc;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 0 14px;
-            cursor: pointer;
+        .utility-actions {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .btn-utility {
+            min-width: 44px;
+            min-height: 46px;
+            padding: 0 12px;
+            background-color: var(--bg-subtle);
+            color: var(--ink-primary);
+            border: 1.5px solid var(--border-control);
+            border-radius: var(--radius-control);
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            flex: 1;
+        }
+
+        @media (min-width: 520px) {
+            .btn-utility {
+                flex: initial;
+            }
+        }
+
+        .btn-utility:hover:not(:disabled) {
+            border-color: var(--brand-ink);
+            color: var(--brand-ink);
+        }
+
+        .btn-utility svg {
+            width: 17px;
+            height: 17px;
+            fill: currentColor;
+            flex-shrink: 0;
+        }
+
+        .density-meter {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            color: var(--ink-secondary);
+        }
+
+        .density-status {
+            font-weight: 600;
+            color: var(--accent-success);
+        }
+
+        .density-status.is-dense {
+            color: var(--accent-warn);
+        }
+
+        .checkbox-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-height: 44px;
+            font-size: 0.875rem;
+            color: var(--ink-primary);
+        }
+
+        .checkbox-row input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--brand-primary);
+        }
+
+        /* Appearance Customization Box */
+        .custom-box {
+            border: 1px solid var(--border-subtle);
+            background-color: var(--bg-subtle);
+            border-radius: var(--radius-panel);
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .swatch-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .swatch-btn {
+            min-width: 44px;
+            min-height: 44px;
+            padding: 6px 10px;
+            border-radius: var(--radius-control);
+            border: 1.5px solid var(--border-control);
+            background-color: var(--bg-surface);
+            color: var(--ink-primary);
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .swatch-btn[aria-pressed="true"] {
+            border-color: var(--brand-ink);
+            background-color: var(--brand-tint);
+        }
+
+        .swatch-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 4px;
+            border: 1px solid rgba(15, 23, 42, 0.25);
+            flex-shrink: 0;
+        }
+
+        .color-picker-wrap {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            min-height: 44px;
+            padding: 4px 10px;
+            border: 1.5px solid var(--border-control);
+            border-radius: var(--radius-control);
+            background-color: var(--bg-surface);
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .color-picker-wrap input[type="color"] {
+            width: 26px;
+            height: 26px;
+            border: none;
+            background: none;
+            padding: 0;
+        }
+
+        .file-upload-row {
+            display: none;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .file-upload-row.is-visible {
+            display: flex;
+        }
+
+        .file-input {
+            min-height: 44px;
+            padding: 8px 10px;
+            border: 1.5px dashed var(--border-control);
+            border-radius: var(--radius-control);
+            background-color: var(--bg-surface);
+            color: var(--ink-primary);
+            font-size: 0.85rem;
+        }
+
+        /* Primary CTA */
+        .btn-primary {
+            min-height: 48px;
+            width: 100%;
+            padding: 12px 20px;
+            background-color: var(--brand-primary);
+            color: #ffffff;
+            border: 1.5px solid var(--brand-primary);
+            border-radius: var(--radius-control);
+            font-size: 0.975rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background-color: var(--brand-hover);
+            border-color: var(--brand-hover);
+        }
+
+        .btn-primary:active:not(:disabled) {
+            background-color: var(--brand-active);
+        }
+
+        /* Status Feedback Banner (R-27) */
+        .feedback-banner {
+            display: none;
+            padding: 12px 14px;
+            border-radius: var(--radius-control);
+            font-size: 0.875rem;
+            font-weight: 500;
+            border: 1px solid transparent;
+        }
+
+        .feedback-banner.is-visible {
+            display: block;
+        }
+
+        .feedback-banner.is-error {
+            background-color: var(--accent-error-bg);
+            color: var(--accent-error);
+            border-color: var(--accent-error-border);
+        }
+
+        .feedback-banner.is-warn {
+            background-color: var(--accent-warn-bg);
+            color: var(--accent-warn);
+            border-color: var(--accent-warn-border);
+        }
+
+        .feedback-banner.is-success {
+            background-color: var(--accent-success-bg);
+            color: var(--accent-success);
+            border-color: var(--accent-success-border);
+        }
+
+        .feedback-banner.is-loading {
+            background-color: var(--brand-tint);
+            color: var(--brand-ink);
+            border-color: var(--border-subtle);
+        }
+
+        /* Preview Stage */
+        .preview-stage {
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-panel);
+            padding: 20px;
+            min-height: 290px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            max-width: 260px;
+            color: var(--ink-secondary);
+        }
+
+        .empty-frame {
+            width: 80px;
+            height: 80px;
+            border: 2px dashed var(--border-control);
+            border-radius: var(--radius-panel);
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.3s ease;
-        }
-        .icon-btn:hover {
-            background-color: #e2e8f0;
-            border-color: #cbd5e1;
-        }
-        .icon-btn:active {
-            transform: scale(0.95);
-        }
-        .icon-btn svg {
-            width: 18px;
-            height: 18px;
-            fill: #475569;
-        }
-        
-        /* Tombol Buat QR */
-        #btn-buat { 
-            background-color: #0e58a6;
-            color: #ffffff; 
-            padding: 14px; 
-            border: none; 
-            border-radius: 8px; 
-            cursor: pointer; 
-            font-size: 15px; 
-            font-weight: 600;
-            font-family: 'Inter', sans-serif;
-            width: 100%;
-            margin-top: 8px;
-            transition: all 0.3s ease;
-        }
-        #btn-buat:hover { 
-            background-color: #0a427c; 
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(14, 88, 166, 0.2);
+            color: var(--brand-ink);
+            background-color: var(--bg-subtle);
         }
 
-        /* Wadah Hasil Canvas */
-        #canvas-container { 
-            margin-top: 24px; 
-            padding: 16px; 
-            background: #f8fafc; 
-            border-radius: 12px;
-            border: 1px dashed #cbd5e1;
-            display: none; 
-            animation: fadeIn 0.5s ease-in-out;
-        }
-        canvas { 
-            max-width: 100%; 
-            height: auto;
-            border-radius: 8px;
+        .empty-state p {
+            font-size: 0.875rem;
         }
 
-        /* Grup Tombol Unduh */
-        .btn-group {
+        .canvas-wrap {
             display: none;
-            gap: 12px;
-            margin-top: 16px;
-            animation: fadeIn 0.5s ease-in-out;
+            width: 100%;
         }
 
-        /* Tombol Unduh (Gaya Outline) */
-        .btn-outline {
-            flex: 1; 
-            background-color: transparent; 
-            color: #0e58a6; 
-            padding: 12px; 
-            border: 2px solid #0e58a6; 
-            border-radius: 8px; 
-            cursor: pointer; 
-            font-size: 14px; 
-            font-weight: 600;
-            font-family: 'Inter', sans-serif;
-            transition: all 0.3s ease;
+        .canvas-wrap.is-ready {
+            display: block;
         }
-        .btn-outline:hover { 
-            background-color: #0e58a6; 
+
+        #qr-canvas {
+            display: block;
+            width: 100%;
+            max-width: 290px;
+            height: auto;
+            aspect-ratio: 400 / 440;
+            margin: 0 auto;
+            border-radius: 6px;
+            border: 1px solid var(--border-subtle);
+            background-color: #ffffff;
+        }
+
+        .logo-note {
+            display: none;
+            margin-top: 10px;
+            font-size: 0.8rem;
+            color: var(--ink-secondary);
+        }
+
+        .logo-note.is-visible {
+            display: block;
+        }
+
+        /* Export Panel */
+        .export-panel {
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .export-panel.is-ready {
+            display: flex;
+        }
+
+        .download-row {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+
+        @media (min-width: 400px) {
+            .download-row {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .btn-secondary {
+            min-height: 44px;
+            padding: 10px 14px;
+            background-color: var(--bg-surface);
+            color: var(--brand-ink);
+            border: 1.5px solid var(--brand-ink);
+            border-radius: var(--radius-control);
+            font-size: 0.875rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background-color: var(--brand-primary);
+            border-color: var(--brand-primary);
             color: #ffffff;
         }
 
-        /* Animasi Muncul */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        /* Local History Panel */
+        .history-panel {
+            border-top: 1px solid var(--border-subtle);
+            padding-top: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .history-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .btn-text-danger {
+            min-height: 44px;
+            padding: 6px 10px;
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: var(--radius-control);
+            color: var(--accent-error);
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .btn-text-danger:hover {
+            background-color: var(--accent-error-bg);
+        }
+
+        .history-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .history-empty {
+            font-size: 0.825rem;
+            color: var(--ink-secondary);
+        }
+
+        .history-item-btn {
+            width: 100%;
+            min-height: 44px;
+            padding: 8px 12px;
+            text-align: left;
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-control);
+            color: var(--ink-primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .history-item-btn:hover {
+            border-color: var(--brand-ink);
+        }
+
+        .history-meta {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .history-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .history-sub {
+            font-size: 0.75rem;
+            color: var(--ink-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .history-tag {
+            font-size: 0.72rem;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 6px;
+            background-color: var(--brand-tint);
+            color: var(--brand-ink);
+            flex-shrink: 0;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                transition: none !important;
+                animation: none !important;
+            }
         }
     </style>
 </head>
 <body>
 
-    <div class="card">
-        <h2><strong>BUAT QR DUA DIMENSI</strong></h2>
-        
-        <div class="input-group">
-            <label>Teks atau URL Tujuan</label>
-            <div class="input-row">
-                <input type="text" id="input-teks" placeholder="Masukkan link atau teks...">
-                
-                <button class="icon-btn" id="btn-shorten" onclick="shortenUrl()" title="Perpendek URL">
-                    <svg viewBox="0 0 24 24">
-                        <path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/>
+    <main class="app-shell">
+        <header class="app-header">
+            <div class="brand-group">
+                <div class="brand-mark" aria-hidden="true">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M3 3h8v8H3V3zm2 2v4h4V5H5zm8-2h8v8h-8V3zm2 2v4h4V5h-4zM3 13h8v8H3v-8zm2 2v4h4v-4H5zm13-2h3v3h-3v-3zm-5 0h3v3h-3v-3zm3 3h3v3h-3v-3zm-3 3h3v2h-3v-2zm5 0h3v2h-3v-2z"/>
                     </svg>
-                </button>
-                
-                <button class="icon-btn" onclick="copyText()" title="Salin Teks/URL">
-                    <svg viewBox="0 0 24 24">
-                        <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
-                    </svg>
-                </button>
+                </div>
+                <div>
+                    <h1>Generator QR Dua Dimensi</h1>
+                    <p class="app-subtitle">Buat kode QR untuk tautan, akses Wi-Fi, atau pesan WhatsApp.</p>
+                </div>
             </div>
-        </div>
-        
-        <div class="input-group">
-            <label>Judul File QR Code</label>
-            <input type="text" id="input-judul" placeholder="Contoh: Website Perusahaan">
-        </div>
-        
-        <button id="btn-buat" onclick="buatQR()">Generate QR</button>
-        
-        <div id="canvas-container">
-            <canvas id="qr-canvas" width="400" height="450"></canvas>
-        </div>
 
-        <div class="btn-group" id="grup-unduh">
-            <!-- Dropdown pilihan ukuran (berdasarkan Lebar/Width) -->
-            <select id="opsi-ukuran" style="padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; outline: none; font-family: 'Inter', sans-serif;">
-                <option value="400">Normal (400px)</option>
-                <option value="720">HD (720px)</option>
-                <option value="1080">Full HD (1080px)</option>
-                <option value="2000">Cetak/Print (2000px)</option>
-            </select>
+            <button
+                type="button"
+                class="theme-toggle"
+                id="btn-theme"
+                aria-pressed="false"
+                aria-label="Ganti ke mode gelap"
+            >
+                <span id="theme-label">Mode Gelap</span>
+            </button>
+        </header>
 
-            <button class="btn-outline" onclick="unduhGambar('png')">Unduh PNG</button>
-            <button class="btn-outline" onclick="unduhGambar('svg')">Unduh SVG</button>
+        <div class="workspace-grid">
+            <section class="form-pane" aria-labelledby="heading-konfigurasi">
+                <div>
+                    <h2 id="heading-konfigurasi" class="section-title">1. Pilih Jenis &amp; Isi Konten</h2>
+                    <p class="app-subtitle">Pilih jenis data yang akan dikodekan menjadi QR.</p>
+                </div>
+
+                <div class="mode-tabs" role="tablist" aria-label="Jenis konten QR">
+                    <button
+                        type="button"
+                        class="mode-tab"
+                        role="tab"
+                        id="tab-url"
+                        aria-selected="true"
+                        aria-controls="panel-url"
+                        data-mode="url"
+                    >
+                        URL / Teks
+                    </button>
+                    <button
+                        type="button"
+                        class="mode-tab"
+                        role="tab"
+                        id="tab-wifi"
+                        aria-selected="false"
+                        aria-controls="panel-wifi"
+                        data-mode="wifi"
+                        tabindex="-1"
+                    >
+                        Akses Wi-Fi
+                    </button>
+                    <button
+                        type="button"
+                        class="mode-tab"
+                        role="tab"
+                        id="tab-wa"
+                        aria-selected="false"
+                        aria-controls="panel-wa"
+                        data-mode="wa"
+                        tabindex="-1"
+                    >
+                        WhatsApp
+                    </button>
+                </div>
+
+                <!-- Panel 1: URL / Teks -->
+                <div class="tab-panel" id="panel-url" role="tabpanel" aria-labelledby="tab-url">
+                    <div class="field-group">
+                        <label class="field-label" for="input-teks">
+                            <span>Teks atau URL Tujuan</span>
+                            <span class="field-hint">Wajib diisi</span>
+                        </label>
+                        <div class="input-wrapper">
+                            <input
+                                type="text"
+                                id="input-teks"
+                                class="text-input"
+                                placeholder="https://contoh.id/halaman atau teks"
+                                autocomplete="off"
+                                spellcheck="false"
+                            >
+                            <div class="utility-actions">
+                                <button
+                                    type="button"
+                                    class="btn-utility"
+                                    id="btn-shorten"
+                                    aria-label="Perpendek URL menggunakan TinyURL"
+                                    title="Perpendek URL"
+                                >
+                                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                                        <path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/>
+                                    </svg>
+                                    <span>Ringkas</span>
+                                </button>
+
+                                <button
+                                    type="button"
+                                    class="btn-utility"
+                                    id="btn-copy"
+                                    aria-label="Salin teks atau URL ke papan klip"
+                                    title="Salin teks atau URL"
+                                >
+                                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                                        <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+                                    </svg>
+                                    <span>Salin</span>
+                                </button>
+
+                                <button
+                                    type="button"
+                                    class="btn-utility"
+                                    id="btn-clear"
+                                    aria-label="Hapus isi kolom teks atau URL"
+                                    title="Hapus isi"
+                                >
+                                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                                        <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="density-meter">
+                            <span id="char-count">0 karakter</span>
+                            <span id="density-status" class="density-status">Kepadatan ideal</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panel 2: Wi-Fi -->
+                <div class="tab-panel" id="panel-wifi" role="tabpanel" aria-labelledby="tab-wifi" hidden>
+                    <div class="field-row-2">
+                        <div class="field-group">
+                            <label class="field-label" for="wifi-ssid">
+                                <span>Nama Wi-Fi (SSID)</span>
+                                <span class="field-hint">Wajib</span>
+                            </label>
+                            <input
+                                type="text"
+                                id="wifi-ssid"
+                                class="text-input"
+                                placeholder="Contoh: Ruang_Ujian_01"
+                                autocomplete="off"
+                            >
+                        </div>
+
+                        <div class="field-group">
+                            <label class="field-label" for="wifi-auth">Keamanan Jaringan</label>
+                            <select id="wifi-auth" class="select-control">
+                                <option value="WPA">WPA / WPA2 / WPA3</option>
+                                <option value="WEP">WEP</option>
+                                <option value="nopass">Tanpa Kata Sandi</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="field-group" id="wifi-pass-group">
+                        <label class="field-label" for="wifi-pass">Kata Sandi Wi-Fi</label>
+                        <div class="input-wrapper">
+                            <input
+                                type="password"
+                                id="wifi-pass"
+                                class="text-input"
+                                placeholder="Masukkan kata sandi Wi-Fi"
+                                autocomplete="off"
+                            >
+                            <button
+                                type="button"
+                                class="btn-utility"
+                                id="btn-toggle-pass"
+                                aria-pressed="false"
+                                aria-label="Tampilkan kata sandi Wi-Fi"
+                            >
+                                Tampilkan
+                            </button>
+                        </div>
+                    </div>
+
+                    <label class="checkbox-row" for="wifi-hidden">
+                        <input type="checkbox" id="wifi-hidden">
+                        <span>Jaringan tersembunyi (Hidden SSID)</span>
+                    </label>
+                </div>
+
+                <!-- Panel 3: WhatsApp -->
+                <div class="tab-panel" id="panel-wa" role="tabpanel" aria-labelledby="tab-wa" hidden>
+                    <div class="field-group">
+                        <label class="field-label" for="wa-phone">
+                            <span>Nomor WhatsApp</span>
+                            <span class="field-hint">Format 08... atau 628...</span>
+                        </label>
+                        <input
+                            type="tel"
+                            id="wa-phone"
+                            class="text-input"
+                            placeholder="Contoh: 081234567890"
+                            autocomplete="off"
+                        >
+                    </div>
+
+                    <div class="field-group">
+                        <label class="field-label" for="wa-message">
+                            <span>Pesan Otomatis</span>
+                            <span class="field-hint">Opsional</span>
+                        </label>
+                        <textarea
+                            id="wa-message"
+                            class="textarea-input"
+                            placeholder="Contoh: Halo Admin, saya ingin menanyakan jadwal kelas."
+                        ></textarea>
+                    </div>
+                </div>
+
+                <!-- Label & Tampilan QR -->
+                <div class="custom-box">
+                    <h3 class="section-title">2. Label &amp; Tampilan Kartu QR</h3>
+
+                    <div class="field-row-2">
+                        <div class="field-group">
+                            <label class="field-label" for="input-judul">
+                                <span>Judul Atas</span>
+                                <span class="field-hint">Opsional</span>
+                            </label>
+                            <input
+                                type="text"
+                                id="input-judul"
+                                class="text-input"
+                                placeholder="Contoh: Portal Ujian Sesi 1"
+                                autocomplete="off"
+                            >
+                        </div>
+
+                        <div class="field-group">
+                            <label class="field-label" for="input-subjudul">
+                                <span>Keterangan Bawah</span>
+                                <span class="field-hint">Opsional</span>
+                            </label>
+                            <input
+                                type="text"
+                                id="input-subjudul"
+                                class="text-input"
+                                placeholder="Contoh: Pindai dengan kamera HP"
+                                autocomplete="off"
+                            >
+                        </div>
+                    </div>
+
+                    <div class="field-row-2">
+                        <div class="field-group">
+                            <span class="field-label" id="label-warna">Warna Modul QR</span>
+                            <div class="swatch-row" role="group" aria-labelledby="label-warna">
+                                <button type="button" class="swatch-btn" data-color="#000000" aria-pressed="true">
+                                    <span class="swatch-dot" style="background-color: #000000;"></span>
+                                    <span>Hitam</span>
+                                </button>
+                                <button type="button" class="swatch-btn" data-color="#0e58a6" aria-pressed="false">
+                                    <span class="swatch-dot" style="background-color: #0e58a6;"></span>
+                                    <span>Biru</span>
+                                </button>
+                                <button type="button" class="swatch-btn" data-color="#065f46" aria-pressed="false">
+                                    <span class="swatch-dot" style="background-color: #065f46;"></span>
+                                    <span>Hijau</span>
+                                </button>
+                                <label class="color-picker-wrap" for="qr-color-custom">
+                                    <input type="color" id="qr-color-custom" value="#000000" aria-label="Pilih warna kustom modul QR">
+                                    <span>Kustom</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="field-group">
+                            <label class="field-label" for="opsi-logo">Logo Tengah QR</label>
+                            <select id="opsi-logo" class="select-control">
+                                <option value="default">Logo Dua Dimensi</option>
+                                <option value="none">Tanpa Logo (Lebih Padat)</option>
+                                <option value="custom">Unggah Logo Sendiri</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="file-upload-row" id="custom-logo-row">
+                        <label class="field-label" for="input-logo-file">Pilih File Logo (PNG, JPG, SVG)</label>
+                        <input type="file" id="input-logo-file" class="file-input" accept="image/*">
+                    </div>
+                </div>
+
+                <button type="button" id="btn-buat" class="btn-primary">
+                    Buat QR Code
+                </button>
+
+                <div
+                    id="feedback-banner"
+                    class="feedback-banner"
+                    role="status"
+                    aria-live="polite"
+                ></div>
+            </section>
+
+            <section class="preview-pane" aria-labelledby="heading-pratinjau">
+                <div style="display: flex; flex-direction: column; gap: 16px;">
+                    <div>
+                        <h2 id="heading-pratinjau" class="section-title">3. Pratinjau &amp; Unduhan</h2>
+                        <p class="app-subtitle">Siap diunduh atau disalin langsung sebagai gambar.</p>
+                    </div>
+
+                    <div class="preview-stage" id="preview-stage">
+                        <div class="empty-state" id="empty-state">
+                            <div class="empty-frame" aria-hidden="true">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M3 3h6v6H3V3zm2 2v2h2V5H5zm10-2h6v6h-6V3zm2 2v2h2V5h-2zM3 15h6v6H3v-6zm2 2v2h2v-2H5zm8-4h2v2h-2v-2zm4 0h4v2h-4v-2zm-4 4h4v4h-4v-4zm6 2h2v2h-2v-2z"/>
+                                </svg>
+                            </div>
+                            <p>Belum ada kode QR. Lengkapi data di sebelah kiri lalu pilih <strong>Buat QR Code</strong>.</p>
+                        </div>
+
+                        <div class="canvas-wrap" id="canvas-container">
+                            <canvas id="qr-canvas" width="400" height="440" aria-label="Pratinjau gambar QR Code"></canvas>
+                            <p class="logo-note" id="logo-note">Logo bawaan tidak dimuat karena pembatasan jaringan; kode QR tetap valid dipindai.</p>
+                        </div>
+                    </div>
+
+                    <div class="export-panel" id="grup-unduh">
+                        <div class="field-group">
+                            <label class="field-label" for="opsi-ukuran">Resolusi Unduhan</label>
+                            <select id="opsi-ukuran" class="select-control">
+                                <option value="400">Standar (Lebar 400px)</option>
+                                <option value="720">HD (Lebar 720px)</option>
+                                <option value="1080">Full HD (Lebar 1080px)</option>
+                                <option value="2000">Cetak Poster (Lebar 2000px)</option>
+                            </select>
+                        </div>
+
+                        <button type="button" class="btn-secondary" id="btn-copy-img">
+                            Salin Gambar QR ke Papan Klip
+                        </button>
+
+                        <div class="download-row">
+                            <button type="button" class="btn-secondary" id="btn-unduh-png">Unduh PNG</button>
+                            <button type="button" class="btn-secondary" id="btn-unduh-svg">Unduh SVG</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="history-panel" aria-labelledby="heading-riwayat">
+                    <div class="history-header">
+                        <h3 id="heading-riwayat" class="section-title">Riwayat Terakhir</h3>
+                        <button type="button" class="btn-text-danger" id="btn-clear-history" hidden>Hapus Riwayat</button>
+                    </div>
+                    <p class="history-empty" id="history-empty">Belum ada riwayat QR tersimpan di peramban ini.</p>
+                    <ul class="history-list" id="history-list"></ul>
+                </div>
+            </section>
         </div>
-    </div>
+    </main>
 
     <script>
-        const logoUrl = "https://lh3.googleusercontent.com/d/196-yYlDwDc-tUVDTslzPAlBWTmf4ZbWg";
-        let currentQrSvgData = ""; 
-        let currentLogoBase64 = "";
+        const DEFAULT_LOGO_URL = "https://lh3.googleusercontent.com/d/196-yYlDwDc-tUVDTslzPAlBWTmf4ZbWg";
+        const HISTORY_KEY = "qr_dua_dimensi_history_v1";
+        const THEME_KEY = "qr_dua_dimensi_theme_v1";
 
-        // --- FITUR BARU: Short Link ---
+        let activeMode = "url";
+        let selectedQrColor = "#000000";
+        let customLogoDataUrl = "";
+        let currentQrSvgData = "";
+        let currentLogoBase64 = "";
+        let currentLogicalWidth = 400;
+        let currentLogicalHeight = 440;
+
+        const htmlRoot = document.documentElement;
+        const btnTheme = document.getElementById("btn-theme");
+        const themeLabel = document.getElementById("theme-label");
+        const modeTabs = Array.from(document.querySelectorAll(".mode-tab"));
+        const tabPanels = {
+            url: document.getElementById("panel-url"),
+            wifi: document.getElementById("panel-wifi"),
+            wa: document.getElementById("panel-wa")
+        };
+
+        const inputTeks = document.getElementById("input-teks");
+        const charCount = document.getElementById("char-count");
+        const densityStatus = document.getElementById("density-status");
+        const btnShorten = document.getElementById("btn-shorten");
+        const btnCopy = document.getElementById("btn-copy");
+        const btnClear = document.getElementById("btn-clear");
+
+        const wifiSsid = document.getElementById("wifi-ssid");
+        const wifiAuth = document.getElementById("wifi-auth");
+        const wifiPassGroup = document.getElementById("wifi-pass-group");
+        const wifiPass = document.getElementById("wifi-pass");
+        const btnTogglePass = document.getElementById("btn-toggle-pass");
+        const wifiHidden = document.getElementById("wifi-hidden");
+
+        const waPhone = document.getElementById("wa-phone");
+        const waMessage = document.getElementById("wa-message");
+
+        const inputJudul = document.getElementById("input-judul");
+        const inputSubjudul = document.getElementById("input-subjudul");
+        const swatchButtons = Array.from(document.querySelectorAll(".swatch-btn"));
+        const qrColorCustom = document.getElementById("qr-color-custom");
+        const opsiLogo = document.getElementById("opsi-logo");
+        const customLogoRow = document.getElementById("custom-logo-row");
+        const inputLogoFile = document.getElementById("input-logo-file");
+
+        const btnBuat = document.getElementById("btn-buat");
+        const feedbackBanner = document.getElementById("feedback-banner");
+        const emptyState = document.getElementById("empty-state");
+        const canvasContainer = document.getElementById("canvas-container");
+        const grupUnduh = document.getElementById("grup-unduh");
+        const logoNote = document.getElementById("logo-note");
+        const btnCopyImg = document.getElementById("btn-copy-img");
+        const btnUnduhPng = document.getElementById("btn-unduh-png");
+        const btnUnduhSvg = document.getElementById("btn-unduh-svg");
+
+        const historyList = document.getElementById("history-list");
+        const historyEmpty = document.getElementById("history-empty");
+        const btnClearHistory = document.getElementById("btn-clear-history");
+
+        /* Theme management (R-21, R-34) */
+        function applyTheme(theme) {
+            const isDark = theme === "dark";
+            if (isDark) {
+                htmlRoot.setAttribute("data-theme", "dark");
+            } else {
+                htmlRoot.removeAttribute("data-theme");
+            }
+            btnTheme.setAttribute("aria-pressed", String(isDark));
+            btnTheme.setAttribute("aria-label", isDark ? "Ganti ke mode terang" : "Ganti ke mode gelap");
+            themeLabel.textContent = isDark ? "Mode Terang" : "Mode Gelap";
+        }
+
+        const savedTheme = localStorage.getItem(THEME_KEY);
+        if (savedTheme === "dark") {
+            applyTheme("dark");
+        }
+
+        btnTheme.addEventListener("click", () => {
+            const nextTheme = htmlRoot.getAttribute("data-theme") === "dark" ? "light" : "dark";
+            applyTheme(nextTheme);
+            localStorage.setItem(THEME_KEY, nextTheme);
+        });
+
+        /* Feedback helper */
+        function showFeedback(type, message) {
+            feedbackBanner.className = `feedback-banner is-visible is-${type}`;
+            feedbackBanner.setAttribute("role", type === "error" ? "alert" : "status");
+            feedbackBanner.textContent = message;
+        }
+
+        function clearFeedback() {
+            feedbackBanner.className = "feedback-banner";
+            feedbackBanner.textContent = "";
+        }
+
+        function escapeXml(unsafeText) {
+            return unsafeText
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&apos;");
+        }
+
+        /* WCAG contrast ratio check against white QR background */
+        function contrastWithWhite(hex) {
+            const clean = hex.replace("#", "");
+            const rgb = [0, 2, 4].map((i) => {
+                const c = parseInt(clean.slice(i, i + 2), 16) / 255;
+                return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+            });
+            const lum = 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2];
+            return 1.05 / (lum + 0.05);
+        }
+
+        /* Mode tabs switching */
+        function switchMode(mode) {
+            activeMode = mode;
+            modeTabs.forEach((tab) => {
+                const isSelected = tab.dataset.mode === mode;
+                tab.setAttribute("aria-selected", String(isSelected));
+                tab.tabIndex = isSelected ? 0 : -1;
+            });
+            Object.entries(tabPanels).forEach(([key, panel]) => {
+                panel.hidden = key !== mode;
+            });
+            clearFeedback();
+        }
+
+        modeTabs.forEach((tab, idx) => {
+            tab.addEventListener("click", () => switchMode(tab.dataset.mode));
+            tab.addEventListener("keydown", (event) => {
+                if (event.key === "ArrowRight" || event.key === "ArrowLeft") {
+                    event.preventDefault();
+                    const dir = event.key === "ArrowRight" ? 1 : -1;
+                    const nextIdx = (idx + dir + modeTabs.length) % modeTabs.length;
+                    modeTabs[nextIdx].focus();
+                    switchMode(modeTabs[nextIdx].dataset.mode);
+                }
+            });
+        });
+
+        /* Character counter and QR density hint */
+        function updateCharDensity() {
+            const len = inputTeks.value.trim().length;
+            charCount.textContent = `${len} karakter`;
+            if (len > 140) {
+                densityStatus.textContent = "Teks panjang (disarankan ringkas URL)";
+                densityStatus.classList.add("is-dense");
+            } else {
+                densityStatus.textContent = "Kepadatan ideal";
+                densityStatus.classList.remove("is-dense");
+            }
+        }
+
+        inputTeks.addEventListener("input", updateCharDensity);
+
+        /* Wi-Fi auth visibility */
+        wifiAuth.addEventListener("change", () => {
+            wifiPassGroup.style.display = wifiAuth.value === "nopass" ? "none" : "flex";
+        });
+
+        btnTogglePass.addEventListener("click", () => {
+            const isHidden = wifiPass.type === "password";
+            wifiPass.type = isHidden ? "text" : "password";
+            btnTogglePass.setAttribute("aria-pressed", String(isHidden));
+            btnTogglePass.textContent = isHidden ? "Sembunyikan" : "Tampilkan";
+        });
+
+        /* QR color selection */
+        function setQrColor(hex) {
+            selectedQrColor = hex;
+            qrColorCustom.value = hex;
+            swatchButtons.forEach((btn) => {
+                btn.setAttribute("aria-pressed", String(btn.dataset.color.toLowerCase() === hex.toLowerCase()));
+            });
+
+            const ratio = contrastWithWhite(hex);
+            if (ratio < 4.5) {
+                showFeedback("warn", `Kontras warna QR (${ratio.toFixed(1)}:1) rendah terhadap latar putih dan berisiko sulit dipindai kamera.`);
+            } else {
+                clearFeedback();
+            }
+        }
+
+        swatchButtons.forEach((btn) => {
+            btn.addEventListener("click", () => setQrColor(btn.dataset.color));
+        });
+
+        qrColorCustom.addEventListener("input", (event) => {
+            setQrColor(event.target.value);
+        });
+
+        /* Logo option handling */
+        opsiLogo.addEventListener("change", () => {
+            customLogoRow.classList.toggle("is-visible", opsiLogo.value === "custom");
+        });
+
+        inputLogoFile.addEventListener("change", (event) => {
+            const file = event.target.files && event.target.files[0];
+            if (!file) {
+                customLogoDataUrl = "";
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = () => {
+                customLogoDataUrl = String(reader.result || "");
+                showFeedback("success", `Logo "${file.name}" siap dipasang di tengah QR.`);
+            };
+            reader.onerror = () => {
+                customLogoDataUrl = "";
+                showFeedback("error", "Gagal membaca file logo. Pilih file gambar lain.");
+            };
+            reader.readAsDataURL(file);
+        });
+
+        /* URL Shortener */
         async function shortenUrl() {
-            const inputTeks = document.getElementById("input-teks");
             const url = inputTeks.value.trim();
 
             if (!url) {
-                alert("Mohon masukkan URL terlebih dahulu.");
+                showFeedback("error", "Masukkan URL terlebih dahulu sebelum meringkas tautan.");
+                inputTeks.focus();
                 return;
             }
 
-            // Validasi apakah input adalah URL yang valid untuk diperpendek
             if (!url.startsWith("http://") && !url.startsWith("https://")) {
-                alert("Harap masukkan URL yang valid (dimulai dengan http:// atau https://). Teks biasa tidak dapat diperpendek.");
+                showFeedback("error", "URL harus diawali http:// atau https:// agar dapat diperpendek.");
+                inputTeks.focus();
                 return;
             }
 
-            const btnShorten = document.getElementById("btn-shorten");
             btnShorten.disabled = true;
-            btnShorten.style.opacity = "0.5";
+            btnShorten.setAttribute("aria-busy", "true");
+            showFeedback("loading", "Memperpendek URL melalui layanan TinyURL...");
 
             try {
-                // Menggunakan TinyURL API (gratis & tidak memerlukan CORS khusus)
                 const response = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(url)}`);
-                
-                if (response.ok) {
-                    const shortUrl = await response.text();
-                    inputTeks.value = shortUrl;
-                    alert("URL berhasil diperpendek!");
-                } else {
-                    alert("Gagal memperpendek URL. Layanan mungkin sedang sibuk.");
+                if (!response.ok) {
+                    throw new Error("HTTP " + response.status);
                 }
+                const shortUrl = await response.text();
+                inputTeks.value = shortUrl.trim();
+                updateCharDensity();
+                showFeedback("success", "URL berhasil diperpendek. Pilih Buat QR Code untuk memperbarui gambar.");
             } catch (error) {
-                console.error("Error shortening URL:", error);
-                alert("Terjadi kesalahan jaringan saat mencoba memperpendek URL.");
+                showFeedback("error", "Gagal memperpendek URL. Periksa koneksi internet atau gunakan URL asli.");
             } finally {
                 btnShorten.disabled = false;
-                btnShorten.style.opacity = "1";
+                btnShorten.removeAttribute("aria-busy");
             }
         }
 
-        // --- FITUR BARU: Copy Teks ---
-        function copyText() {
-            const inputTeks = document.getElementById("input-teks");
-            
-            if (!inputTeks.value.trim()) {
-                alert("Tidak ada teks yang dapat disalin.");
+        async function copyText() {
+            const value = inputTeks.value.trim();
+            if (!value) {
+                showFeedback("error", "Kolom teks atau URL masih kosong, tidak ada yang disalin.");
+                inputTeks.focus();
+                return;
+            }
+            try {
+                if (navigator.clipboard && window.isSecureContext) {
+                    await navigator.clipboard.writeText(value);
+                } else {
+                    inputTeks.select();
+                    document.execCommand("copy");
+                }
+                showFeedback("success", "Teks atau URL berhasil disalin ke papan klip.");
+            } catch (error) {
+                showFeedback("error", "Gagal menyalin otomatis. Salin teks langsung dari kolom input.");
+            }
+        }
+
+        function clearInputs() {
+            inputTeks.value = "";
+            updateCharDensity();
+            clearFeedback();
+            inputTeks.focus();
+        }
+
+        /* Build payload string by active tab */
+        function buildQrPayload() {
+            if (activeMode === "url") {
+                const teks = inputTeks.value.trim();
+                if (!teks) {
+                    showFeedback("error", "Masukkan teks atau URL tujuan terlebih dahulu.");
+                    inputTeks.focus();
+                    return null;
+                }
+                return { payload: teks, label: "URL/Teks", summary: teks };
+            }
+
+            if (activeMode === "wifi") {
+                const ssid = wifiSsid.value.trim();
+                if (!ssid) {
+                    showFeedback("error", "Masukkan Nama Wi-Fi (SSID) terlebih dahulu.");
+                    wifiSsid.focus();
+                    return null;
+                }
+                const auth = wifiAuth.value;
+                const pass = wifiPass.value;
+                if (auth !== "nopass" && !pass) {
+                    showFeedback("error", "Masukkan kata sandi Wi-Fi atau pilih Tanpa Kata Sandi.");
+                    wifiPass.focus();
+                    return null;
+                }
+                const escapeWifi = (s) => s.replace(/([\\;,:"])/g, "\\$1");
+                const hiddenFlag = wifiHidden.checked ? "true" : "false";
+                const wifiString = auth === "nopass"
+                    ? `WIFI:T:nopass;S:${escapeWifi(ssid)};H:${hiddenFlag};;`
+                    : `WIFI:T:${auth};S:${escapeWifi(ssid)};P:${escapeWifi(pass)};H:${hiddenFlag};;`;
+                return { payload: wifiString, label: "Wi-Fi", summary: `Wi-Fi: ${ssid}` };
+            }
+
+            if (activeMode === "wa") {
+                const rawDigits = waPhone.value.replace(/\D/g, "");
+                if (!rawDigits || rawDigits.length < 8) {
+                    showFeedback("error", "Masukkan nomor WhatsApp yang valid (minimal 8 digit).");
+                    waPhone.focus();
+                    return null;
+                }
+                const normalized = rawDigits.startsWith("0") ? `62${rawDigits.slice(1)}` : rawDigits;
+                const msg = waMessage.value.trim();
+                const waUrl = msg
+                    ? `https://wa.me/${normalized}?text=${encodeURIComponent(msg)}`
+                    : `https://wa.me/${normalized}`;
+                return { payload: waUrl, label: "WhatsApp", summary: `WA: +${normalized}` };
+            }
+
+            return null;
+        }
+
+        /* Main QR Generation */
+        function buatQR(skipHistorySave = false) {
+            const built = buildQrPayload();
+            if (!built) {
                 return;
             }
 
-            // Salin ke clipboard sistem
-            navigator.clipboard.writeText(inputTeks.value).then(() => {
-                alert("Teks berhasil disalin ke clipboard!");
-            }).catch(err => {
-                console.error("Gagal menyalin: ", err);
-                alert("Gagal menyalin teks secara otomatis.");
+            if (typeof QRCode === "undefined") {
+                showFeedback("error", "Pustaka pembuat QR belum selesai dimuat. Muat ulang halaman lalu coba lagi.");
+                return;
+            }
+
+            const logoMode = opsiLogo.value;
+            if (logoMode === "custom" && !customLogoDataUrl) {
+                showFeedback("error", "Pilih file gambar logo terlebih dahulu atau ubah opsi logo tengah.");
+                inputLogoFile.focus();
+                return;
+            }
+
+            btnBuat.disabled = true;
+            btnBuat.setAttribute("aria-busy", "true");
+            logoNote.classList.remove("is-visible");
+            currentLogoBase64 = "";
+
+            const judul = inputJudul.value.trim();
+            const subjudul = inputSubjudul.value.trim();
+            const hasSubjudul = subjudul.length > 0;
+
+            const rectWidth = 400;
+            const rectHeight = hasSubjudul ? 472 : 440;
+            currentLogicalWidth = rectWidth;
+            currentLogicalHeight = rectHeight;
+
+            const canvas = document.getElementById("qr-canvas");
+            const ctx = canvas.getContext("2d");
+            const dpr = window.devicePixelRatio || 1;
+
+            canvas.width = rectWidth * dpr;
+            canvas.height = rectHeight * dpr;
+            canvas.style.aspectRatio = `${rectWidth} / ${rectHeight}`;
+
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = "high";
+
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(0, 0, rectWidth, rectHeight);
+
+            ctx.fillStyle = "#0f172a";
+            ctx.font = "700 20px 'Inter', Arial, sans-serif";
+            ctx.textAlign = "center";
+            const teksJudul = judul === "" ? "QR Code" : judul;
+            ctx.fillText(teksJudul, rectWidth / 2, 42, 352);
+
+            if (hasSubjudul) {
+                ctx.fillStyle = "#334155";
+                ctx.font = "500 14px 'Inter', Arial, sans-serif";
+                ctx.fillText(subjudul, rectWidth / 2, 444, 352);
+            }
+
+            const tempCanvas = document.createElement("canvas");
+            const qrSize = 340;
+            const qrX = 30;
+            const qrY = 62;
+
+            QRCode.toCanvas(tempCanvas, built.payload, {
+                width: qrSize,
+                margin: 2,
+                color: { dark: selectedQrColor, light: "#ffffff" },
+                errorCorrectionLevel: "H"
+            }, function (error) {
+                if (error) {
+                    btnBuat.disabled = false;
+                    btnBuat.removeAttribute("aria-busy");
+                    showFeedback("error", "Data terlalu panjang untuk dikodekan menjadi QR. Ringkas teks terlebih dahulu.");
+                    return;
+                }
+
+                ctx.drawImage(tempCanvas, qrX, qrY, qrSize, qrSize);
+
+                QRCode.toString(built.payload, {
+                    type: "svg",
+                    margin: 2,
+                    color: { dark: selectedQrColor, light: "#ffffff" },
+                    errorCorrectionLevel: "H"
+                }, function (err, svgString) {
+                    if (!err && svgString) {
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(svgString, "image/svg+xml");
+                        const svgEl = doc.documentElement;
+                        svgEl.setAttribute("width", String(qrSize));
+                        svgEl.setAttribute("height", String(qrSize));
+                        svgEl.setAttribute("x", String(qrX));
+                        svgEl.setAttribute("y", String(qrY));
+                        currentQrSvgData = svgEl.outerHTML;
+                    }
+
+                    emptyState.style.display = "none";
+                    canvasContainer.classList.add("is-ready");
+                    grupUnduh.classList.add("is-ready");
+                    btnBuat.disabled = false;
+                    btnBuat.removeAttribute("aria-busy");
+                    showFeedback("success", "Kode QR berhasil dibuat dan siap diunduh atau disalin.");
+
+                    if (!skipHistorySave) {
+                        saveHistoryItem({
+                            mode: activeMode,
+                            label: built.label,
+                            summary: built.summary,
+                            judul,
+                            subjudul,
+                            color: selectedQrColor,
+                            logoMode,
+                            fields: {
+                                teks: inputTeks.value,
+                                wifiSsid: wifiSsid.value,
+                                wifiAuth: wifiAuth.value,
+                                wifiPass: wifiPass.value,
+                                wifiHidden: wifiHidden.checked,
+                                waPhone: waPhone.value,
+                                waMessage: waMessage.value
+                            }
+                        });
+                    }
+
+                    if (logoMode === "none") {
+                        return;
+                    }
+
+                    const img = new Image();
+                    if (logoMode === "default") {
+                        img.crossOrigin = "Anonymous";
+                        img.src = DEFAULT_LOGO_URL;
+                    } else {
+                        img.src = customLogoDataUrl;
+                    }
+
+                    img.onload = function () {
+                        try {
+                            const imgCanvas = document.createElement("canvas");
+                            imgCanvas.width = img.width || 160;
+                            imgCanvas.height = img.height || 160;
+                            imgCanvas.getContext("2d").drawImage(img, 0, 0, imgCanvas.width, imgCanvas.height);
+                            currentLogoBase64 = imgCanvas.toDataURL("image/png");
+
+                            const logoSize = 72;
+                            const centerX = qrX + qrSize / 2;
+                            const centerY = qrY + qrSize / 2;
+
+                            ctx.fillStyle = "#ffffff";
+                            ctx.beginPath();
+                            ctx.arc(centerX, centerY, logoSize / 2 + 6, 0, 2 * Math.PI);
+                            ctx.fill();
+
+                            ctx.save();
+                            ctx.beginPath();
+                            ctx.arc(centerX, centerY, logoSize / 2, 0, Math.PI * 2, true);
+                            ctx.closePath();
+                            ctx.clip();
+                            ctx.imageSmoothingEnabled = true;
+                            ctx.imageSmoothingQuality = "high";
+                            ctx.drawImage(img, centerX - logoSize / 2, centerY - logoSize / 2, logoSize, logoSize);
+                            ctx.restore();
+                        } catch (e) {
+                            logoNote.classList.add("is-visible");
+                        }
+                    };
+
+                    img.onerror = function () {
+                        logoNote.classList.add("is-visible");
+                    };
+                });
             });
         }
 
-        // --- FUNGSI BAWAAN: Generate QR ---
-        // --- FUNGSI BAWAAN: Generate QR ---
-function buatQR() {
-    const teks = document.getElementById("input-teks").value;
-    const judul = document.getElementById("input-judul").value;
-    
-    if (!teks) {
-        alert("Mohon masukkan Teks atau URL tujuan terlebih dahulu.");
-        return;
-    }
+        /* Copy QR image directly to clipboard */
+        async function copyQrImage() {
+            if (!canvasContainer.classList.contains("is-ready")) {
+                showFeedback("error", "Buat QR Code terlebih dahulu sebelum menyalin gambar.");
+                return;
+            }
 
-    const canvas = document.getElementById("qr-canvas");
-    const ctx = canvas.getContext("2d");
+            if (!navigator.clipboard || typeof ClipboardItem === "undefined") {
+                showFeedback("warn", "Peramban ini tidak mendukung salin gambar langsung. Gunakan tombol Unduh PNG.");
+                return;
+            }
 
-    // --- FIX 1: Resolusi High-DPI untuk ketajaman ekstra ---
-    const dpr = window.devicePixelRatio || 1;
-    const rectWidth = 400;
-    const rectHeight = 450;
+            const canvas = document.getElementById("qr-canvas");
+            canvas.toBlob(async (blob) => {
+                if (!blob) {
+                    showFeedback("error", "Gagal menyiapkan gambar QR untuk disalin.");
+                    return;
+                }
+                try {
+                    await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+                    showFeedback("success", "Gambar QR berhasil disalin ke papan klip. Siap ditempel (Ctrl+V).");
+                } catch (err) {
+                    showFeedback("warn", "Izin papan klip ditolak peramban. Silakan gunakan tombol Unduh PNG.");
+                }
+            }, "image/png");
+        }
 
-    // Atur resolusi internal canvas dikalikan dengan rasio layar
-    canvas.width = rectWidth * dpr;
-    canvas.height = rectHeight * dpr;
-    
-    // Atur ukuran visual canvas menggunakan CSS
-    canvas.style.width = `${rectWidth}px`;
-    canvas.style.height = `${rectHeight}px`;
+        /* Export PNG or SVG */
+        function unduhGambar(format) {
+            if (!canvasContainer.classList.contains("is-ready")) {
+                showFeedback("error", "Buat QR Code terlebih dahulu sebelum mengunduh.");
+                return;
+            }
 
-    // Skalakan context agar semua elemen yang digambar proporsional
-    ctx.scale(dpr, dpr);
+            const judulInput = inputJudul.value.trim();
+            const subjudulInput = inputSubjudul.value.trim();
+            const baseName = (judulInput === "" ? "QR_Dua_Dimensi" : judulInput).replace(/\s+/g, "_");
+            const targetWidth = parseInt(document.getElementById("opsi-ukuran").value, 10);
+            const targetHeight = Math.round(targetWidth * (currentLogicalHeight / currentLogicalWidth));
+            const link = document.createElement("a");
 
-    // --- FIX 2: Tingkatkan Kualitas Smoothing Gambar ---
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = "high";
+            if (format === "png") {
+                const canvasAsli = document.getElementById("qr-canvas");
+                const tempCanvas = document.createElement("canvas");
+                tempCanvas.width = targetWidth;
+                tempCanvas.height = targetHeight;
 
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, rectWidth, rectHeight);
+                const tempCtx = tempCanvas.getContext("2d");
+                tempCtx.imageSmoothingEnabled = true;
+                tempCtx.imageSmoothingQuality = "high";
+                tempCtx.drawImage(canvasAsli, 0, 0, targetWidth, targetHeight);
 
-    ctx.fillStyle = "#111111";
-    ctx.font = "bold 22px 'Inter', Arial, sans-serif";
-    ctx.textAlign = "center";
-    let teksJudul = judul.trim() === "" ? "QR Code" : judul;
-    ctx.fillText(teksJudul, rectWidth / 2, 45); 
+                link.download = `${baseName}_${targetWidth}px.png`;
+                link.href = tempCanvas.toDataURL("image/png");
+            } else if (format === "svg") {
+                const judulAman = escapeXml(judulInput === "" ? "QR Code" : judulInput);
+                const subjudulSvg = subjudulInput
+                    ? `<text x="200" y="444" font-family="'Inter', Arial, sans-serif" font-size="14" font-weight="500" text-anchor="middle" fill="#334155">${escapeXml(subjudulInput)}</text>`
+                    : "";
 
-    const tempCanvas = document.createElement("canvas");
-    
-    QRCode.toCanvas(tempCanvas, teks, {
-        width: 360,
-        margin: 1,
-        color: { dark: "#000000", light: "#ffffff" },
-        errorCorrectionLevel: 'H' 
-    }, function (error) {
-        if (error) console.error(error);
-        ctx.drawImage(tempCanvas, 20, 65, 360, 360);
+                const logoOverlay = currentLogoBase64
+                    ? `
+                        <circle cx="200" cy="232" r="42" fill="#ffffff" />
+                        <clipPath id="logo-clip">
+                            <circle cx="200" cy="232" r="36" />
+                        </clipPath>
+                        <image href="${currentLogoBase64}" x="164" y="196" width="72" height="72" clip-path="url(#logo-clip)" preserveAspectRatio="xMidYMid slice" />
+                    `
+                    : "";
 
-        QRCode.toString(teks, {
-            type: 'svg',
-            margin: 1,
-            color: { dark: "#000000", light: "#ffffff" },
-            errorCorrectionLevel: 'H'
-        }, function (err, svgString) {
-            if (err) console.error(err);
-            
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(svgString, "image/svg+xml");
-            const svgEl = doc.documentElement;
-            svgEl.setAttribute("width", "360");
-            svgEl.setAttribute("height", "360");
-            svgEl.setAttribute("x", "20");
-            svgEl.setAttribute("y", "65");
-            currentQrSvgData = svgEl.outerHTML;
+                const svgLengkap = `
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${currentLogicalWidth} ${currentLogicalHeight}" width="${targetWidth}" height="${targetHeight}">
+                        <rect width="${currentLogicalWidth}" height="${currentLogicalHeight}" fill="#ffffff" />
+                        <text x="200" y="42" font-family="'Inter', Arial, sans-serif" font-size="20" font-weight="700" text-anchor="middle" fill="#0f172a">${judulAman}</text>
+                        ${currentQrSvgData}
+                        ${logoOverlay}
+                        ${subjudulSvg}
+                    </svg>
+                `.trim();
 
-            const img = new Image();
-            img.crossOrigin = "Anonymous"; 
-            img.src = logoUrl;
-            
-            img.onload = function() {
-                const imgCanvas = document.createElement("canvas");
-                imgCanvas.width = img.width;
-                imgCanvas.height = img.height;
-                imgCanvas.getContext("2d").drawImage(img, 0, 0);
-                currentLogoBase64 = imgCanvas.toDataURL("image/png");
+                const blob = new Blob([svgLengkap], { type: "image/svg+xml;charset=utf-8" });
+                link.download = `${baseName}_vector.svg`;
+                link.href = URL.createObjectURL(blob);
+            }
 
-                const logoSize = 80; 
-                const x = 20 + (360 / 2) - (logoSize / 2);
-                const y = 65 + (360 / 2) - (logoSize / 2);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showFeedback("success", `File ${format.toUpperCase()} berhasil diunduh.`);
+        }
 
-                ctx.fillStyle = "#ffffff";
-                ctx.beginPath();
-                ctx.arc(x + logoSize/2, y + logoSize/2, (logoSize/2) + 6, 0, 2 * Math.PI);
-                ctx.fill();
+        /* Local History Management */
+        function loadHistory() {
+            try {
+                const raw = localStorage.getItem(HISTORY_KEY);
+                return raw ? JSON.parse(raw) : [];
+            } catch (e) {
+                return [];
+            }
+        }
 
-                ctx.save();
-                ctx.beginPath();
-                ctx.arc(x + logoSize/2, y + logoSize/2, logoSize/2, 0, Math.PI * 2, true);
-                ctx.closePath();
-                ctx.clip();
-                
-                // Pastikan smoothing menyala kembali di dalam area clipping
-                ctx.imageSmoothingEnabled = true;
-                ctx.imageSmoothingQuality = "high";
-                
-                ctx.drawImage(img, x, y, logoSize, logoSize);
-                ctx.restore();
+        function saveHistoryItem(entry) {
+            const list = loadHistory().filter((item) => item.summary !== entry.summary || item.judul !== entry.judul);
+            list.unshift(entry);
+            const trimmed = list.slice(0, 5);
+            try {
+                localStorage.setItem(HISTORY_KEY, JSON.stringify(trimmed));
+            } catch (e) {
+                /* Ignore storage quota errors */
+            }
+            renderHistory();
+        }
 
-                document.getElementById("canvas-container").style.display = "block";
-                document.getElementById("grup-unduh").style.display = "flex";
-            };
+        function restoreHistoryItem(item) {
+            switchMode(item.mode || "url");
+            inputTeks.value = item.fields.teks || "";
+            wifiSsid.value = item.fields.wifiSsid || "";
+            wifiAuth.value = item.fields.wifiAuth || "WPA";
+            wifiPass.value = item.fields.wifiPass || "";
+            wifiHidden.checked = Boolean(item.fields.wifiHidden);
+            wifiPassGroup.style.display = wifiAuth.value === "nopass" ? "none" : "flex";
+            waPhone.value = item.fields.waPhone || "";
+            waMessage.value = item.fields.waMessage || "";
+
+            inputJudul.value = item.judul || "";
+            inputSubjudul.value = item.subjudul || "";
+            setQrColor(item.color || "#000000");
+
+            const targetLogoMode = item.logoMode === "custom" && !customLogoDataUrl ? "default" : (item.logoMode || "default");
+            opsiLogo.value = targetLogoMode;
+            customLogoRow.classList.toggle("is-visible", targetLogoMode === "custom");
+
+            updateCharDensity();
+            buatQR(true);
+        }
+
+        function renderHistory() {
+            const items = loadHistory();
+            historyList.innerHTML = "";
+
+            if (items.length === 0) {
+                historyEmpty.hidden = false;
+                btnClearHistory.hidden = true;
+                return;
+            }
+
+            historyEmpty.hidden = true;
+            btnClearHistory.hidden = false;
+
+            items.forEach((item) => {
+                const li = document.createElement("li");
+                const btn = document.createElement("button");
+                btn.type = "button";
+                btn.className = "history-item-btn";
+                btn.setAttribute("aria-label", `Muat ulang QR ${item.judul || item.summary}`);
+
+                const meta = document.createElement("div");
+                meta.className = "history-meta";
+
+                const titleEl = document.createElement("span");
+                titleEl.className = "history-title";
+                titleEl.textContent = item.judul || item.summary;
+
+                const subEl = document.createElement("span");
+                subEl.className = "history-sub";
+                subEl.textContent = item.summary;
+
+                const tagEl = document.createElement("span");
+                tagEl.className = "history-tag";
+                tagEl.textContent = item.label;
+
+                meta.appendChild(titleEl);
+                meta.appendChild(subEl);
+                btn.appendChild(meta);
+                btn.appendChild(tagEl);
+                btn.addEventListener("click", () => restoreHistoryItem(item));
+
+                li.appendChild(btn);
+                historyList.appendChild(li);
+            });
+        }
+
+        btnClearHistory.addEventListener("click", () => {
+            localStorage.removeItem(HISTORY_KEY);
+            renderHistory();
+            showFeedback("success", "Riwayat QR lokal telah dihapus.");
         });
-    });
-}
 
-        // --- FUNGSI BAWAAN: Unduh dengan Opsi Resolusi ---
-          function unduhGambar(format) {
-              const judulInput = document.getElementById("input-judul").value.trim();
-              let namaFile = judulInput === "" ? "QR_Code" : judulInput;
-              namaFile = namaFile.replace(/\s+/g, '_'); 
+        btnShorten.addEventListener("click", shortenUrl);
+        btnCopy.addEventListener("click", copyText);
+        btnClear.addEventListener("click", clearInputs);
+        btnBuat.addEventListener("click", () => buatQR(false));
+        btnCopyImg.addEventListener("click", copyQrImage);
+        btnUnduhPng.addEventListener("click", () => unduhGambar("png"));
+        btnUnduhSvg.addEventListener("click", () => unduhGambar("svg"));
 
-              const link = document.createElement("a");
-    // Ambil nilai resolusi dari dropdown
-              const targetWidth = parseInt(document.getElementById("opsi-ukuran").value);
-    // Hitung tinggi proporsional (berdasarkan rasio asli 400x450)
-              const targetHeight = targetWidth * (450 / 400); 
+        [inputTeks, wifiSsid, wifiPass, waPhone, inputJudul, inputSubjudul].forEach((field) => {
+            field.addEventListener("keydown", (event) => {
+                if (event.key === "Enter") {
+                    event.preventDefault();
+                    buatQR(false);
+                } else if (event.key === "Escape") {
+                    clearFeedback();
+                }
+            });
+        });
 
-              if (format === 'png') {
-                  const canvasAsli = document.getElementById("qr-canvas");
-
-        // Buat canvas sementara untuk proses perbesaran gambar (scaling)
-                  const tempCanvas = document.createElement("canvas");
-                  tempCanvas.width = targetWidth;
-                  tempCanvas.height = targetHeight;
-                  const tempCtx = tempCanvas.getContext("2d");
-
-        // Aktifkan mode penghalusan agar gambar tidak bergerigi saat diperbesar
-                  tempCtx.imageSmoothingEnabled = true;
-                  tempCtx.imageSmoothingQuality = "high";
-
-        // Salin isi canvas asli dan ubah ke ukuran baru di canvas sementara
-                  tempCtx.drawImage(canvasAsli, 0, 0, targetWidth, targetHeight);
-
-                  link.download = `${namaFile}_${targetWidth}px.png`;
-                  link.href = tempCanvas.toDataURL("image/png");
-          } 
-    else if (format === 'svg') {
-        let judulTeks = judulInput === "" ? "QR Code" : judulInput;
-        
-        // Untuk SVG, kita gunakan properti viewBox agar gambar merespons ukuran berapapun secara proporsional
-        const svgLengkap = `
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 450" width="${targetWidth}" height="${targetHeight}">
-                <rect width="400" height="450" fill="#ffffff" />
-                <text x="200" y="45" font-family="'Inter', Arial, sans-serif" font-size="22" font-weight="bold" text-anchor="middle" fill="#111111">${judulTeks}</text>
-                
-                ${currentQrSvgData}
-                
-                <circle cx="200" cy="245" r="46" fill="#ffffff" />
-                <clipPath id="logo-clip">
-                    <circle cx="200" cy="245" r="40" />
-                </clipPath>
-                <image href="${currentLogoBase64}" x="160" y="205" width="80" height="80" clip-path="url(#logo-clip)" preserveAspectRatio="xMidYMid slice" />
-            </svg>
-        `;
-
-        const blob = new Blob([svgLengkap], { type: "image/svg+xml;charset=utf-8" });
-        link.download = `${namaFile}_vector.svg`;
-        link.href = URL.createObjectURL(blob);
-    }
-
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-}
+        renderHistory();
     </script>
 </body>
 </html>
